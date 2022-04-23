@@ -16,7 +16,7 @@ SOURCE := lib
 BUILD := build
 
 # Project's modules
-MODULES := pool utils
+MODULES := pool task thread utils
 
 # Files extensions
 HEADER_EXTENSION     := 

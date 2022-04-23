@@ -14,6 +14,8 @@ public:
 
 private:
   bool debug;
+  int min_threads;
+  int max_threads;
 };
 
 }

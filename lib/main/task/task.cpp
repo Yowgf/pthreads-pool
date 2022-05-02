@@ -2,12 +2,14 @@
 
 namespace task {
 
-std::unique_ptr<task_descr_t> fetch_task(std::istream& is)
+std::unique_ptr<task_descr_t> fetch_task(task::tdq& task_queue)
 {
-  int pid = 0;
-  int ms = 0;
-  is >> pid >> ms;
-  return std::make_unique<task_descr_t>(pid, ms);
+  // TODO: mutual exclusion with mutex and condition var
+
+
+  auto td_ptr = task_queue.front(); task_queue.pop();
+
+  return std::unique_ptr<task_descr_t>(td_ptr);
 }
 
 bool is_eow(task_descr_t* td)

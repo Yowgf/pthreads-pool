@@ -1,10 +1,7 @@
 #include <iostream>
-#include <queue>
-#include <vector>
+#include <pthread.h>
 
 #include <pool/pool.hpp>
-#include <task/task.hpp>
-#include <thread/thread.hpp>
 #include <utils/log.hpp>
 
 namespace pool {
@@ -19,20 +16,43 @@ pool::pool(const utils::parsed_args& config)
 }
 
 void pool::init()
-{}
+{
+  // Initialize mutexes and condition variables.
+  pthread_mutex_init(&thread::thread::numthreads_mutex, nullptr);
+  pthread_mutex_init(&thread::thread::numfree_mutex, nullptr);
 
-// TODOs:
-//
-// - master thread initializes the run, and worker threads execute the rest
-//
-// - pthread_exit instead of return
-//
+  // Create the minimum number of threads necessary for the pool to be
+  // considered ready.
+  for (int i = 0; i < this->min_threads; ++i) {
+    thread::thread::create();
+  }
+}
+
+// end sends EOW (end of work) task to all threads
+void pool::end(task::tdq& q, int max_threads)
+{
+  for (int i = 0; i < max_threads; ++i) {
+    auto eow = task::task_descr_t::create_eow();
+    q.push(eow);
+  }
+}
+
 void pool::run()
 {
-  thread::thread t;
+  task::tdq task_queue;
 
-  auto td = task::fetch_task(std::cin);
-  t.work(td.get());
+  task_descr_t* td = nullptr;
+  while (true) {
+    // Read task descriptor from input stream.
+    auto new_td = task::task_descr_t::create_from_stream(std::cin);
+    if (new_td == nullptr) {
+      // TODO: This seems wrong
+      break;
+    }
+    task_queue.push(new_td);
+  }
+
+  this->end(task_queue, this->max_threads);
 }
 
 }

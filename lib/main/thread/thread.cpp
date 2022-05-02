@@ -3,14 +3,23 @@
 
 namespace thread {
 
-void thread::work(task::task_descr_t* td)
+// Static members
+unsigned thread::num_threads = 0;
+unsigned thread::num_free_threads = 0;
+
+pthread_mutex_t thread::numthreads_mutex;
+pthread_mutex_t thread::numfree_mutex;
+
+void thread::work(task::tdq& task_queue)
 {
   while (true) {
-    if (task::is_eow(td)) {
+    auto td = task::fetch_task(task_queue);
+
+    if (task::is_eow(td.get())) {
       return;
     }
 
-    task::process(td);
+    task::process(td.get());
 
     return;
   }

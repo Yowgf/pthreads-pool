@@ -4,6 +4,9 @@
 
 namespace task {
 
+//===---------------------------------===
+// DO NOT TOUCH __ DEFINED BY PROFESSOR
+//===---------------------------------===
 void process(task_descr_t* td)
 {
     struct timespec zzz;
@@ -12,7 +15,7 @@ void process(task_descr_t* td)
     zzz.tv_nsec = td->ms * 1000000L; // 0 <= ms <= 999
 
     printf("IP #%d\n", td->pid);
-    nanosleep(&zzz,NULL);
+    nanosleep(&zzz, NULL);
     printf("FP #%d\n", td->pid);
 }
 

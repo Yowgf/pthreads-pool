@@ -12,15 +12,19 @@ namespace pool {
 class pool {
 public:
   pool(const utils::parsed_args& config);
+  ~pool();
 
   void init();
   void run();
-  void end(task::tdq&, int max_threads);
 
 private:
   bool debug;
-  int min_threads;
-  int max_threads;
+  size_t min_threads;
+  size_t max_threads;
+
+  std::vector<thread::thread> threads;
+
+  void end(size_t max_threads);
 };
 
 }

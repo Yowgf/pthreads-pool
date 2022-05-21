@@ -8,60 +8,47 @@
 
 namespace thread {
 
-class thread;
-
-struct work_args {
-  std::unique_ptr<thread> self;
-  task::tdq& task_queue;
-};
-
 class thread {
 public:
-  static unsigned num_threads;
-  static std::vector<std::unique_ptr<thread>> free_threads;
-
-  // Mutexes and condition variables are initialized externally by pool of
-  // threads, _exactly once_.
-  static pthread_mutex_t numthreads_mutex;
-  static pthread_mutex_t freethreads_mutex;
+  static unsigned num_free_threads;
+  static pthread_mutex_t num_free_threads_mutex;
 
   thread(int tid, int min_threads) :
     tid(tid), min_threads(min_threads)
-  {}
-
-  static void create(int tid, int min_threads)
   {
-    pthread_mutex_lock(&numthreads_mutex);
-    num_threads++;
-    pthread_mutex_unlock(&numthreads_mutex);
+    pthread_mutex_lock(&num_free_threads_mutex);
+    num_free_threads++;
+    pthread_mutex_unlock(&num_free_threads_mutex);
+  }
 
-    auto new_thread = std::make_unique<thread>(tid, min_threads);
-    free_threads[tid] = std::move(new_thread);
+  void signal_free_thread() {
+    pthread_mutex_lock(&num_free_threads_mutex);
+    num_free_threads++;
+    pthread_mutex_unlock(&num_free_threads_mutex);
+  }
+
+  void signal_busy_thread() {
+    pthread_mutex_lock(&num_free_threads_mutex);
+    num_free_threads--;
+    pthread_mutex_unlock(&num_free_threads_mutex);
   }
 
   void parallel_work_quit()
   {
     printf("TE %d\n", tid);
-    pthread_mutex_lock(&numthreads_mutex);
-    num_threads++;
-    pthread_mutex_unlock(&numthreads_mutex);
-    free_threads[tid] = nullptr;
+    signal_free_thread();
     pthread_exit(nullptr);
   }
 
   void parallel_work(void* vdargs)
   {
-    auto args = reinterpret_cast<work_args*>(vdargs);
-    auto self{std::move(args->self)};
-    auto tq{args->task_queue};
-
     printf("TB %d\n", tid);
 
     while (true) {
       // Fetch task
-      auto td = task::fetch_task(tq);
+      auto td = task::consume_task();
 
-      // Check if should quit
+      // Check if should quit before processing.
       if (task::is_eow(td.get())) {
 	break;
       }
@@ -69,10 +56,9 @@ public:
       // Process task
       task::process(td.get());
 
-      // Check if should quit
-      if (free_threads.size() >= this->min_threads) {
-	free_threads[tid] = std::move(self);
-      } else {
+      // If there are more threads waiting for a task than the minimum number of
+      // threads, this thread should not wait. It should quit.
+      if (task::get_num_consumer_threads_waiting() >= this->min_threads) {
 	break;
       }
     }
@@ -80,18 +66,17 @@ public:
     parallel_work_quit();
   }
 
-  void work(task::tdq& task_queue)
+  void work()
   {
-    // Indicate that the thread is no longer free
-    auto self = free_threads[tid];
-    free_threads[tid] = nullptr;
+    signal_busy_thread();
 
-    parallel_work((void*) new work_args{std::move(self), task_queue});
+    // TODO: add pthread fork call here
+    parallel_work(nullptr);
   }
 
 private:
   const int tid;
-  const int min_threads;
+  const size_t min_threads;
 };
 
 }

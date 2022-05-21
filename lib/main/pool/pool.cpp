@@ -11,48 +11,57 @@ pool::pool(const utils::parsed_args& config)
   this->debug = config.debug;
   LOG(this->debug, "Debug mode is activated.");
 
-  this->min_threads = config.min_threads;
-  this->max_threads = config.max_threads;
+  this->min_threads = static_cast<size_t>(config.min_threads);
+  this->max_threads = static_cast<size_t>(config.max_threads);
+
+  for (decltype(this->max_threads) i = 0; i < this->max_threads; ++i) {
+    this->threads.push_back(thread::thread(i, this->min_threads));
+  }
+}
+
+pool::~pool()
+{
+  pthread_cond_destroy(&task::TQ::NOT_EMPTY);
+  pthread_cond_destroy(&task::TQ::NOT_FULL);
 }
 
 void pool::init()
 {
   // Initialize mutexes and condition variables.
-  pthread_mutex_init(&thread::thread::numthreads_mutex, nullptr);
-  pthread_mutex_init(&thread::thread::numfree_mutex, nullptr);
+  pthread_mutex_init(&thread::thread::num_free_threads_mutex, nullptr);
+  pthread_mutex_init(&task::TQ::MUTEX, nullptr);
+  pthread_cond_init(&task::TQ::NOT_EMPTY, nullptr);
+  pthread_cond_init(&task::TQ::NOT_FULL, nullptr);
 
-  // Create the minimum number of threads necessary for the pool to be
-  // considered ready.
-  for (int i = 0; i < this->min_threads; ++i) {
-    thread::thread::create();
-  }
+  task::TQ::MAX_SIZE = 0xFFFF;
 }
 
-// end sends EOW (end of work) task to all threads
-void pool::end(task::tdq& q, int max_threads)
+// end fills task queue with EOW (end of work) task descriptors.
+void pool::end(size_t max_threads)
 {
-  for (int i = 0; i < max_threads; ++i) {
+  for (decltype(max_threads) i = 0; i < max_threads; ++i) {
     auto eow = task::task_descr_t::create_eow();
-    q.push(eow);
+    task::produce_task(eow);
   }
+
+  // TODO: wait until all threads are finished.
 }
 
+// - Only master thread pushes tasks to the task queue
+//
+// - There has to be a global condition variable the worker threads
 void pool::run()
 {
-  task::tdq task_queue;
-
-  task_descr_t* td = nullptr;
   while (true) {
     // Read task descriptor from input stream.
     auto new_td = task::task_descr_t::create_from_stream(std::cin);
     if (new_td == nullptr) {
-      // TODO: This seems wrong
       break;
     }
-    task_queue.push(new_td);
+    task::produce_task(new_td);
   }
 
-  this->end(task_queue, this->max_threads);
+  this->end(this->max_threads);
 }
 
 }

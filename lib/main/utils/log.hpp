@@ -2,16 +2,12 @@
 #define UTILS_LOG_H
 
 #include <iostream>
+#include <pthread.h>
 
 // Normal logging function. Accepts printf-like formatting.
 #define LOG(isSupposedToPrint, msg, ...)\
   if (isSupposedToPrint) {\
-    fprintf(stderr, "[INFO] " msg "\n", ##__VA_ARGS__);\
-  }
-
-#define LOGEXPR(isSupposedToPrint, expr)\
-  if (isSupposedToPrint) {\
-    std::cerr << expr << std::endl;\
+    fprintf(stderr, "[INFO] (%ld) " msg "\n", pthread_self(), ##__VA_ARGS__);\
   }
 
 // Log attribute att.

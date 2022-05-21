@@ -8,7 +8,7 @@
 
 namespace thread {
 
-using work_args = struct {
+struct work_args {
   const int tid;
   const size_t min_threads;
   const size_t max_threads;
@@ -27,13 +27,16 @@ public:
     pthread_attr_init(&my_thread_attrs);
     pthread_attr_setdetachstate(&my_thread_attrs, PTHREAD_CREATE_DETACHED);
 
-    signal_free_thread(tid, max_threads);
+    pthread_mutex_lock(&num_free_threads_mutex);
+    num_free_threads++;
+    pthread_mutex_unlock(&num_free_threads_mutex);
   }
 
   static void signal_free_thread(int tid, size_t max_threads) {
     pthread_mutex_lock(&num_free_threads_mutex);
     num_free_threads++;
     if (num_free_threads >= max_threads) {
+      printf("All threads are free");
       pthread_cond_signal(&all_threads_free);
     }
     pthread_mutex_unlock(&num_free_threads_mutex);

@@ -9,7 +9,7 @@ namespace pool {
 pool::pool(const utils::parsed_args& config)
 {
   this->debug = config.debug;
-  LOG(this->debug, "(master) Debug mode is activated.");
+  LOG(this->debug, "Debug mode is activated.");
 
   this->min_threads = static_cast<size_t>(config.min_threads);
   this->max_threads = static_cast<size_t>(config.max_threads);
@@ -24,7 +24,7 @@ pool::~pool()
 
 void pool::init()
 {
-  LOG(this->debug, "(master) Initializing pool of threads.");
+  LOG(this->debug, "Initializing pool of threads.");
 
   // Initialize mutexes and condition variables.
   pthread_mutex_init(&thread::thread::num_free_threads_mutex, nullptr);
@@ -44,13 +44,13 @@ void pool::init()
     this->threads.at(i).work();
   }
 
-  LOG(this->debug, "(master) Successfully initialized pool of threads.");
+  LOG(this->debug, "Successfully initialized pool of threads.");
 }
 
 // end fills task queue with EOW (end of work) task descriptors.
 void pool::end(size_t max_threads)
 {
-  LOG(this->debug, "(master) Ending pool of threads.");
+  LOG(this->debug, "Ending pool of threads.");
 
   for (decltype(max_threads) i = 0; i < max_threads; ++i) {
     auto eow = task::task_descr_t::create_eow();
@@ -59,14 +59,14 @@ void pool::end(size_t max_threads)
 
   // Wait until all threads are finished.
   pthread_mutex_lock(&thread::thread::num_free_threads_mutex);
-  LOG(this->debug, "(master) Waiting for threads to finish.");
+  LOG(this->debug, "Waiting for threads to finish.");
   while (thread::thread::num_free_threads < this->max_threads) {
     pthread_cond_wait(&thread::thread::all_threads_free,
 		      &thread::thread::num_free_threads_mutex);
   }
   pthread_mutex_unlock(&thread::thread::num_free_threads_mutex);
 
-  LOG(this->debug, "(master) Successfully ended pool of threads.");
+  LOG(this->debug, "Successfully ended pool of threads.");
 }
 
 // - Only master thread pushes tasks to the task queue
@@ -80,8 +80,8 @@ void pool::run()
     if (new_td == nullptr) {
       break;
     }
-    LOGEXPR(this->debug, "(master) Producing task with pid= "+
-	std::to_string(new_td->pid)+ " ms=" + std::to_string(new_td->ms));
+    LOG(this->debug, "Producing task with pid=%d ms=%d",
+	new_td->pid, new_td->ms);
     task::produce_task(new_td);
 
     // Create threads if necessary

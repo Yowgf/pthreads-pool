@@ -12,9 +12,6 @@ using clockT = std::chrono::duration<double>;
 
 pool::pool(const utils::parsed_args& config)
 {
-  this->debug = config.debug;
-  LOG(this->debug, "Debug mode is activated.");
-
   this->min_threads = static_cast<size_t>(config.min_threads);
   this->max_threads = static_cast<size_t>(config.max_threads);
 }
@@ -27,7 +24,7 @@ pool::~pool()
 
 void pool::init()
 {
-  LOG(this->debug, "Initializing pool of threads.");
+  LOG("Initializing pool of threads.");
 
   // Initialize mutexes and condition variables.
   pthread_mutex_init(&thread::thread::free_threads_mutex, nullptr);
@@ -45,23 +42,23 @@ void pool::init()
     this->threads.at(i).work();
   }
 
-  LOG(this->debug, "Successfully initialized pool of threads.");
+  LOG("Successfully initialized pool of threads.");
 }
 
 // end fills task queue with EOW (end of work) task descriptors.
 void pool::end(size_t max_threads)
 {
-  LOG(this->debug, "Ending pool of threads.");
+  LOG("Ending pool of threads.");
 
   for (decltype(max_threads) i = 0; i < max_threads; ++i) {
     auto eow = task::task_descr_t::create_eow();
     task::produce_task(eow);
   }
 
-  LOG(this->debug, "Waiting for threads to finish.");
+  LOG("Waiting for threads to finish.");
   thread::thread::wait_all_threads_done(this->max_threads);
 
-  LOG(this->debug, "Successfully ended pool of threads.");
+  LOG("Successfully ended pool of threads.");
 }
 
 void pool::dispatch_thread()
@@ -83,7 +80,7 @@ void pool::run()
     if (new_td == nullptr) {
       break;
     }
-    LOG(this->debug, "Producing task with pid=%d ms=%d",
+    LOG("Producing task with pid=%d ms=%d",
 	new_td->pid, new_td->ms);
     task::produce_task(new_td);
 
@@ -94,7 +91,7 @@ void pool::run()
 
   clockT elapsed = std::chrono::high_resolution_clock::now() - before;
   double clkCount = elapsed.count();
-  LOG(this->debug, "Execution time (seconds): %.6f", clkCount);
+  LOG("Execution time (seconds): %.6f", clkCount);
 }
 
 }

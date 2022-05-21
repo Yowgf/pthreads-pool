@@ -2,6 +2,7 @@
 
 #include <pool/pool.hpp>
 #include <utils/parse_args.hpp>
+#include <utils/log.hpp>
 
 int main(int argc, char** argv) {
   auto parsed_args = utils::parse_args(argc, argv);
@@ -11,6 +12,8 @@ int main(int argc, char** argv) {
 	      << std::endl;
     return 1;
   }
+
+  log::set_log_level(parsed_args.log_level);
 
   pool::pool p{parsed_args};
   p.init();

@@ -18,7 +18,6 @@ public:
   void run();
 
 private:
-  bool   debug;
   size_t min_threads;
   size_t max_threads;
 

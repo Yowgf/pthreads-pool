@@ -6,7 +6,7 @@ namespace utils {
 parsed_args parse_args(int argc, char** argv)
 {
   std::string err_msg;
-  bool debug = false;
+  log::log_level log_level = log::log_level{};
   int min_threads = 0;
   int max_threads = 0;
 
@@ -24,14 +24,16 @@ parsed_args parse_args(int argc, char** argv)
   // If -d is found anywhere, debug mode is activated.
   for (auto i = 1; i < argc; ++i) {
     if (std::string(argv[i]) == "-d") {
-      debug = true;
+      log_level = log::log_level::DEBUG;
+      std::cerr << "Found -d: " << argv[i];
+      break;
     }
   }
 
-  LOG(debug, "Received config (min_threads=%d max_threads=%d debug=%d)",
-      min_threads, max_threads, debug);
+  LOG("Received config (min_threads=%d max_threads=%d log_level=%d)",
+      min_threads, max_threads, static_cast<int>(log_level));
 
-  return parsed_args{std::move(err_msg), debug, min_threads, max_threads};
+  return parsed_args{std::move(err_msg), log_level, min_threads, max_threads};
 }
 
 }

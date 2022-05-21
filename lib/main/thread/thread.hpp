@@ -88,7 +88,7 @@ public:
 
       // If there are more threads waiting for a task than the minimum number of
       // threads, this thread should not wait. It should quit.
-      if (task::get_num_consumer_threads_waiting() >= min_threads) {
+      if (task::get_num_consumer_threads_waiting() > min_threads) {
 	break;
       }
     }

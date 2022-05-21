@@ -32,7 +32,8 @@ void pool::init()
   pthread_cond_init(&task::TQ::NOT_EMPTY, nullptr);
   pthread_cond_init(&task::TQ::NOT_FULL, nullptr);
 
-  task::TQ::MAX_SIZE = 0xFFFF;
+  // 40 is the size specified by the assignment's specification.
+  task::TQ::MAX_SIZE = 40;
 
   // Initialize thread objects. The threads are not dispatched immediately.
   for (decltype(max_threads) i = 0; i < max_threads; ++i) {
@@ -71,7 +72,9 @@ void pool::end(size_t max_threads)
 
 // - Only master thread pushes tasks to the task queue
 //
-// - There has to be a global condition variable the worker threads
+// - There has to be a global condition variable the worker threads can use to
+//   indicate they have finished their task.
+//
 void pool::run()
 {
   while (true) {

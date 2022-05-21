@@ -4,7 +4,8 @@
 #include <iostream>
 #include <pthread.h>
 
-// Normal logging function. Accepts printf-like formatting.
+// Normal logging function. Accepts printf-like formatting. msg must be a raw
+// string.
 #define LOG(isSupposedToPrint, msg, ...)\
   if (isSupposedToPrint) {\
     fprintf(stderr, "[INFO] (%ld) " msg "\n", pthread_self(), ##__VA_ARGS__);\

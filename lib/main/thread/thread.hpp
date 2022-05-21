@@ -5,6 +5,7 @@
 #include <vector>
 
 #include <task/task.hpp>
+// #include <utils/log.hpp>
 
 namespace thread {
 
@@ -90,7 +91,6 @@ public:
   void work()
   {
     signal_busy_thread(tid);
-
     pthread_create(&my_thread, &my_thread_attrs, &parallel_work,
 		   static_cast<void*>(new work_args{tid, min_threads, max_threads}));
   }

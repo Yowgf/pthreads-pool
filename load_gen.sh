@@ -24,6 +24,10 @@ for ms in $(seq "$left_limit" "$step" "$right_limit"); do
     echo "$pid $ms"
     pid=$((pid + 1))
 done
+
+# Hopefully the task queue empties here
+sleep 10s
+
 # High to low processing times
 for ms in $(seq "$right_limit" "-$step" "$left_limit"); do
     echo "$pid $ms"

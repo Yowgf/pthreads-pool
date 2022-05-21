@@ -3,12 +3,11 @@
 namespace task {
 
 // Initialize static variables.
-tdq             TQ::QUEUE;
-pthread_mutex_t TQ::MUTEX;
-pthread_cond_t  TQ::NOT_EMPTY;
-pthread_cond_t  TQ::NOT_FULL;
-size_t          TQ::NUM_CONSUMER_THREADS_WAITING;
-size_t          TQ::MAX_SIZE;  
+tdq              TQ::QUEUE;
+pthread_mutex_t  TQ::MUTEX;
+pthread_cond_t   TQ::NOT_EMPTY;
+pthread_cond_t   TQ::NOT_FULL;
+size_t           TQ::NUM_CONSUMER_THREADS_WAITING;
 
 std::unique_ptr<task_descr_t> consume_task()
 {

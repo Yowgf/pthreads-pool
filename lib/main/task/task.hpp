@@ -14,16 +14,15 @@ using tdq = std::queue<task_descr_t*>;
 
 class TQ {
 public:
-  static tdq             QUEUE;
+  static tdq              QUEUE;
   // This mutex should be used to access any of the TASK_QUEUE_* variables.
-  static pthread_mutex_t MUTEX;
+  static pthread_mutex_t  MUTEX;
   // Cond vars.
-  static pthread_cond_t  NOT_EMPTY;
-  static pthread_cond_t  NOT_FULL;
-  static size_t          NUM_CONSUMER_THREADS_WAITING;
-  // MAX_SIZE is initialized by pool of threads and should be read-only
-  // afterwards.
-  static size_t          MAX_SIZE;
+  static pthread_cond_t   NOT_EMPTY;
+  static pthread_cond_t   NOT_FULL;
+  static size_t           NUM_CONSUMER_THREADS_WAITING;
+  // 40 is the size specified by the assignment's specification.
+  static constexpr size_t MAX_SIZE = 40;
 };
 
 // produce_task and consume_task implement the producer-consumer pattern.

@@ -18,13 +18,13 @@ public:
   void run();
 
 private:
-  bool debug;
+  bool   debug;
   size_t min_threads;
   size_t max_threads;
-  size_t num_active_threads;
 
   std::vector<thread::thread> threads;
 
+  void dispatch_thread();
   void end(size_t max_threads);
 };
 

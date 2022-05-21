@@ -17,7 +17,6 @@ pool::pool(const utils::parsed_args& config)
 
   this->min_threads = static_cast<size_t>(config.min_threads);
   this->max_threads = static_cast<size_t>(config.max_threads);
-  this->num_active_threads = 0;
 }
 
 pool::~pool()
@@ -31,13 +30,10 @@ void pool::init()
   LOG(this->debug, "Initializing pool of threads.");
 
   // Initialize mutexes and condition variables.
-  pthread_mutex_init(&thread::thread::num_free_threads_mutex, nullptr);
+  pthread_mutex_init(&thread::thread::free_threads_mutex, nullptr);
   pthread_mutex_init(&task::TQ::MUTEX, nullptr);
   pthread_cond_init(&task::TQ::NOT_EMPTY, nullptr);
   pthread_cond_init(&task::TQ::NOT_FULL, nullptr);
-
-  // 40 is the size specified by the assignment's specification.
-  task::TQ::MAX_SIZE = 40;
 
   // Initialize thread objects. The threads are not dispatched immediately.
   for (decltype(max_threads) i = 0; i < max_threads; ++i) {
@@ -62,16 +58,20 @@ void pool::end(size_t max_threads)
     task::produce_task(eow);
   }
 
-  // Wait until all threads are finished.
-  pthread_mutex_lock(&thread::thread::num_free_threads_mutex);
   LOG(this->debug, "Waiting for threads to finish.");
-  while (thread::thread::num_free_threads < this->max_threads) {
-    pthread_cond_wait(&thread::thread::all_threads_free,
-		      &thread::thread::num_free_threads_mutex);
-  }
-  pthread_mutex_unlock(&thread::thread::num_free_threads_mutex);
+  thread::thread::wait_all_threads_done(this->max_threads);
 
   LOG(this->debug, "Successfully ended pool of threads.");
+}
+
+void pool::dispatch_thread()
+{
+  pthread_mutex_lock(&thread::thread::free_threads_mutex);
+  if (task::TQ::NUM_CONSUMER_THREADS_WAITING <= 0) {
+    // TODO: Make some NEW thread work
+    
+  }
+  pthread_mutex_unlock(&thread::thread::free_threads_mutex);
 }
 
 // - Only master thread pushes tasks to the task queue
@@ -94,7 +94,7 @@ void pool::run()
     task::produce_task(new_td);
 
     // Create threads if necessary
-    
+    dispatch_thread();
   }
 
   this->end(this->max_threads);

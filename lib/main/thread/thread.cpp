@@ -4,8 +4,8 @@
 namespace thread {
 
 // Initialize static members
-unsigned        thread::num_free_threads = 0;
-pthread_mutex_t thread::num_free_threads_mutex;
+std::set<int>   thread::free_threads;
+pthread_mutex_t thread::free_threads_mutex;
 pthread_cond_t  thread::all_threads_free;
 
 }

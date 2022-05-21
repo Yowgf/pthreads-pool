@@ -2,7 +2,7 @@
 #define THREAD_THREAD_H
 
 #include <pthread.h>
-#include <vector>
+#include <set>
 
 #include <task/task.hpp>
 // #include <utils/log.hpp>
@@ -17,36 +17,31 @@ struct work_args {
 
 class thread {
 public:
-  static unsigned        num_free_threads;
-  static pthread_mutex_t num_free_threads_mutex;
+  static std::set<int>   free_threads;
+  static pthread_mutex_t free_threads_mutex;
   static pthread_cond_t  all_threads_free;
 
-  thread(int tid, size_t min_threads, size_t max_threads) :
-    tid(tid), min_threads(min_threads), max_threads(max_threads)
-  {
-    // Initialize pthreads objects
-    pthread_attr_init(&my_thread_attrs);
-    pthread_attr_setdetachstate(&my_thread_attrs, PTHREAD_CREATE_DETACHED);
-
-    pthread_mutex_lock(&num_free_threads_mutex);
-    num_free_threads++;
-    pthread_mutex_unlock(&num_free_threads_mutex);
+  static void wait_all_threads_done(size_t max_threads) {
+    pthread_mutex_lock(&free_threads_mutex);
+    while (free_threads.size() < max_threads) {
+      pthread_cond_wait(&all_threads_free, &free_threads_mutex);
+    }
+    pthread_mutex_unlock(&free_threads_mutex);
   }
 
   static void signal_free_thread(int tid, size_t max_threads) {
-    pthread_mutex_lock(&num_free_threads_mutex);
-    num_free_threads++;
-    if (num_free_threads >= max_threads) {
-      printf("All threads are free");
+    pthread_mutex_lock(&free_threads_mutex);
+    free_threads.insert(tid);
+    if (free_threads.size() >= max_threads) {
       pthread_cond_signal(&all_threads_free);
     }
-    pthread_mutex_unlock(&num_free_threads_mutex);
+    pthread_mutex_unlock(&free_threads_mutex);
   }
 
   static void signal_busy_thread(int tid) {
-    pthread_mutex_lock(&num_free_threads_mutex);
-    num_free_threads--;
-    pthread_mutex_unlock(&num_free_threads_mutex);
+    pthread_mutex_lock(&free_threads_mutex);
+    free_threads.erase(tid);
+    pthread_mutex_unlock(&free_threads_mutex);
   }
 
   static void parallel_work_quit(int tid, size_t max_threads)
@@ -86,6 +81,18 @@ public:
     parallel_work_quit(tid, max_threads);
 
     return nullptr;
+  }
+
+  thread(int tid, size_t min_threads, size_t max_threads) :
+    tid(tid), min_threads(min_threads), max_threads(max_threads)
+  {
+    // Initialize pthreads objects
+    pthread_attr_init(&my_thread_attrs);
+    pthread_attr_setdetachstate(&my_thread_attrs, PTHREAD_CREATE_DETACHED);
+
+    pthread_mutex_lock(&free_threads_mutex);
+    free_threads.insert(tid);
+    pthread_mutex_unlock(&free_threads_mutex);
   }
 
   void work()

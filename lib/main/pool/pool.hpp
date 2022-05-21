@@ -21,6 +21,7 @@ private:
   bool debug;
   size_t min_threads;
   size_t max_threads;
+  size_t num_active_threads;
 
   std::vector<thread::thread> threads;
 

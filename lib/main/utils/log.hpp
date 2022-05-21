@@ -9,6 +9,11 @@
     fprintf(stderr, "[INFO] " msg "\n", ##__VA_ARGS__);\
   }
 
+#define LOGEXPR(isSupposedToPrint, expr)\
+  if (isSupposedToPrint) {\
+    std::cerr << expr << std::endl;\
+  }
+
 // Log attribute att.
 #define LOGATT(isSupposedToPrint, att)          \
   if (isSupposedToPrint) {                      \

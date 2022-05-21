@@ -12,4 +12,4 @@ APPLIANCE_MAIN :=
 BUILD_MAIN :=
 
 MAIN_FILE := tools/main.cpp
-TARGET := build/main.out
+TARGET := prog

@@ -4,11 +4,13 @@
 #   on all of them.
 # ------------------------------------------------------------------------------
 
-.PHONY : clean unitTest perfTest
+.PHONY : build clean unitTest perfTest
 
 # The --parents switch here allows to automatically create parent directories when needed.
 $(OBJECT_MOD_DIRS) ::
 	@-mkdir --parents $@
+
+build : $(TARGET)
 
 # Deletes all the directories supposed to contain objects.
 clean ::
@@ -29,7 +31,8 @@ ifneq ($(strip $(OBJECT_DIRS)),)
 			$(call e_prev_cmd, Cleaning of some directory failed.) \
 		else \
 		echo No cleaning was performed.; \
-		fi
+		fi; \
+		rm -f $(TARGET)
 endif
 endif
 

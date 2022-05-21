@@ -66,12 +66,12 @@ void pool::end(size_t max_threads)
 
 void pool::dispatch_thread()
 {
-  pthread_mutex_lock(&thread::thread::free_threads_mutex);
-  if (task::TQ::NUM_CONSUMER_THREADS_WAITING <= 0) {
-    // TODO: Make some NEW thread work
-    
+  if (task::get_num_consumer_threads_waiting() <= 0) {
+    auto free_tid = thread::thread::pop_free_tid();
+    if (free_tid >= 0) {
+      threads.at(free_tid).work();
+    }
   }
-  pthread_mutex_unlock(&thread::thread::free_threads_mutex);
 }
 
 // - Only master thread pushes tasks to the task queue
@@ -84,7 +84,6 @@ void pool::run()
   auto before = std::chrono::high_resolution_clock::now();
 
   while (true) {
-    // Read task descriptor from input stream and dispatch the task.
     auto new_td = task::task_descr_t::create_from_stream(std::cin);
     if (new_td == nullptr) {
       break;
@@ -93,7 +92,6 @@ void pool::run()
 	new_td->pid, new_td->ms);
     task::produce_task(new_td);
 
-    // Create threads if necessary
     dispatch_thread();
   }
 

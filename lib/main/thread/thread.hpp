@@ -29,6 +29,21 @@ public:
     pthread_mutex_unlock(&free_threads_mutex);
   }
 
+  // return -1 if no free thread is available
+  static int pop_free_tid() {
+    int free_tid = -1;
+
+    pthread_mutex_lock(&free_threads_mutex);
+    if (!free_threads.empty()) {
+      auto it = free_threads.begin();
+      free_tid = *it;
+      free_threads.erase(it);
+    }
+    pthread_mutex_unlock(&free_threads_mutex);
+
+    return free_tid;
+  }
+
   static void signal_free_thread(int tid, size_t max_threads) {
     pthread_mutex_lock(&free_threads_mutex);
     free_threads.insert(tid);

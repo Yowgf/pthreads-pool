@@ -74,11 +74,6 @@ void pool::dispatch_thread()
   }
 }
 
-// - Only master thread pushes tasks to the task queue
-//
-// - There has to be a global condition variable the worker threads can use to
-//   indicate they have finished their task.
-//
 void pool::run()
 {
   auto before = std::chrono::high_resolution_clock::now();

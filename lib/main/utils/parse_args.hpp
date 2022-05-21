@@ -11,7 +11,7 @@ namespace utils {
 class parsed_args {
 public:
   parsed_args(std::string&& err_msg,
-	      bool debug,
+	      bool debug = false,
 	      int min_threads = 0,
 	      int max_threads = 40) :
     debug(debug), min_threads(min_threads), max_threads(max_threads)

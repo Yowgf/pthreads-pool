@@ -14,7 +14,7 @@ parsed_args parse_args(int argc, char** argv)
   if (argc < min_args) {
     err_msg = std::string("need at least ") + std::to_string(min_args-1) +
       " arguments.";
-    return parsed_args{std::move(err_msg), debug};
+    return parsed_args{std::move(err_msg)};
   }
 
   // Parse min / max threads number

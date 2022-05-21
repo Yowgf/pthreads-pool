@@ -1,3 +1,5 @@
+#include <chrono>
+#include <iomanip>
 #include <iostream>
 #include <pthread.h>
 
@@ -5,6 +7,8 @@
 #include <utils/log.hpp>
 
 namespace pool {
+
+using clockT = std::chrono::duration<double>;
 
 pool::pool(const utils::parsed_args& config)
 {
@@ -77,6 +81,8 @@ void pool::end(size_t max_threads)
 //
 void pool::run()
 {
+  auto before = std::chrono::high_resolution_clock::now();
+
   while (true) {
     // Read task descriptor from input stream and dispatch the task.
     auto new_td = task::task_descr_t::create_from_stream(std::cin);
@@ -92,6 +98,10 @@ void pool::run()
   }
 
   this->end(this->max_threads);
+
+  clockT elapsed = std::chrono::high_resolution_clock::now() - before;
+  double clkCount = elapsed.count();
+  LOG(this->debug, "Execution time (seconds): %.6f", clkCount);
 }
 
 }
